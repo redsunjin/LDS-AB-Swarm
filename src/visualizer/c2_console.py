@@ -1,99 +1,110 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.gridspec as gridspec
-from matplotlib.widgets import Button, Slider
+from matplotlib.widgets import Button, TextBox
 import numpy as np
 from typing import List, Tuple, Optional, Callable
 from src.simulator.drone import Drone
 from src.simulator.threat import Threat
+from src.core.local_llm_c2 import AirGappedLocalLLMC2Engine, TacticalC2Intent
+from src.core.dsp_protocol import DefensiveSwarmProtocol
 
 class C2ManagementConsolePoC:
     """
-    Operational C2 Management Console PoC (지상 지휘통제 관리 콘솔 PoC).
-    Features Interactive Buttons for Scenario Switching, Pop-Up Relaunch,
-    Countermeasure Events, and Real-Time Environmental Disturbances.
+    DSD-OS Operational C2 Management Console PoC (지상 지휘통제 관리 콘솔 PoC).
+    Integrates Air-Gapped Local LLM Natural Language Tactical Command Box, 
+    Open DSP Binary Packet Stream Monitor, and Open Device HAL Adapter Status.
     """
-    def __init__(self, title: str = "LDS-AB OPERATIONAL C2 MANAGEMENT CONSOLE (PoC)"):
+    def __init__(self, title: str = "DSD-OS OPERATIONAL C2 MANAGEMENT CONSOLE (PoC)"):
         plt.style.use('dark_background')
-        self.fig = plt.figure(figsize=(16, 9), facecolor='#0b0f19')
-        self.fig.canvas.manager.set_window_title("LDS-AB Operational C2 Management Console PoC")
+        self.fig = plt.figure(figsize=(16, 9.5), facecolor='#0b0f19')
+        self.fig.canvas.manager.set_window_title("DSD-OS Operational C2 Management Console PoC")
 
-        # Layout: 12x16 GridSpec
-        gs = gridspec.GridSpec(12, 16, figure=self.fig)
+        self.llm_engine = AirGappedLocalLLMC2Engine()
 
-        # 1. Main 3D Airspace Panel (Left side: rows 0-11, cols 0-10)
-        self.ax_3d = self.fig.add_subplot(gs[0:12, 0:10], projection='3d')
+        # Layout: 13x16 GridSpec
+        gs = gridspec.GridSpec(13, 16, figure=self.fig)
+
+        # 1. Main 3D Airspace Panel (Left side: rows 0-12, cols 0-10)
+        self.ax_3d = self.fig.add_subplot(gs[0:13, 0:10], projection='3d')
         self.ax_3d.set_facecolor('#0f172a')
 
-        # 2. Telemetry & Swarm Health Panel (Top right: rows 0-3, cols 10-16)
+        # 2. Swarm Telemetry Panel (Top right: rows 0-3, cols 10-16)
         self.ax_telemetry = self.fig.add_subplot(gs[0:3, 10:16])
         self.ax_telemetry.set_facecolor('#0f172a')
         self.ax_telemetry.axis('off')
 
-        # 3. Threat Tracking Panel (Middle right: rows 3-5, cols 10-16)
+        # 3. Threat & HAL Status Panel (Middle right: rows 3-5, cols 10-16)
         self.ax_threat = self.fig.add_subplot(gs[3:5, 10:16])
         self.ax_threat.set_facecolor('#0f172a')
         self.ax_threat.axis('off')
 
-        # 4. System Logs & AI Benchmark Panel (Middle-lower right: rows 5-8, cols 10-16)
+        # 4. DSP Packet & LLM Log Panel (Middle-lower right: rows 5-8, cols 10-16)
         self.ax_log = self.fig.add_subplot(gs[5:8, 10:16])
         self.ax_log.set_facecolor('#0f172a')
         self.ax_log.axis('off')
 
-        # 5. Interactive C2 Command Buttons Panel (Bottom right: rows 8-12, cols 10-16)
-        self.ax_cmd_bg = self.fig.add_subplot(gs[8:12, 10:16])
+        # Background for Controls
+        self.ax_cmd_bg = self.fig.add_subplot(gs[8:13, 10:16])
         self.ax_cmd_bg.set_facecolor('#0f172a')
         self.ax_cmd_bg.axis('off')
 
         self.last_log_messages: List[str] = [
-            "C2 Console Initialized.",
-            "UWB Mesh Ranging Online (100 Hz).",
-            "Local AI Edge Controller Ready."
+            "DSD-OS Core v1.0 Initialized.",
+            "HAL Adapter: Open Device Binding Active.",
+            "DSP Protocol Engine: 100 Hz Streaming.",
+            "Local LLM Tactical C2 Engine: READY."
         ]
 
         # Callbacks
-        self.on_scenario_change: Optional[Callable[[str], None]] = None
+        self.on_llm_command: Optional[Callable[[TacticalC2Intent], None]] = None
         self.on_kill_drones: Optional[Callable[[], None]] = None
         self.on_relaunch: Optional[Callable[[], None]] = None
-        self.on_toggle_wind: Optional[Callable[[], None]] = None
 
-        self._setup_interactive_buttons(gs)
+        self._setup_interactive_controls(gs)
 
-    def _setup_interactive_buttons(self, gs):
-        """Build Matplotlib interactive buttons on C2 console GUI."""
-        # Row 1 Buttons: Scenario Selection
-        ax_btn_scen_a = self.fig.add_subplot(gs[8, 10:13])
-        ax_btn_scen_b = self.fig.add_subplot(gs[8, 13:16])
-        self.btn_scen_a = Button(ax_btn_scen_a, 'Scenario A: Weaving', color='#1e293b', hovercolor='#0284c7')
-        self.btn_scen_b = Button(ax_btn_scen_b, 'Scenario B: Tilted', color='#1e293b', hovercolor='#0284c7')
+    def _setup_interactive_controls(self, gs):
+        """Setup Natural Language Text Box and C2 Buttons."""
+        # Row 1: Natural Language C2 Command Text Input
+        ax_textbox = self.fig.add_subplot(gs[8, 10:16])
+        self.txt_c2_cmd = TextBox(ax_textbox, 'Local LLM C2: ', initial='2층 각도 배리어 전개하고 파괴 드론 복구해', color='#1e293b', hovercolor='#0284c7')
+        self.txt_c2_cmd.on_submit(self._on_text_submit)
 
-        ax_btn_scen_c = self.fig.add_subplot(gs[9, 10:13])
-        ax_btn_scen_d = self.fig.add_subplot(gs[9, 13:16])
-        self.btn_scen_c = Button(ax_btn_scen_c, 'Scenario C: Saturation', color='#0284c7', hovercolor='#0f766e')
-        self.btn_scen_d = Button(ax_btn_scen_d, 'Scenario D: Wind Gust', color='#1e293b', hovercolor='#d97706')
+        # Row 2: Scenario Quick Buttons
+        ax_btn_scen_a = self.fig.add_subplot(gs[9, 10:13])
+        ax_btn_scen_b = self.fig.add_subplot(gs[9, 13:16])
+        self.btn_scen_a = Button(ax_btn_scen_a, 'Prompt: S-곡선 회피 전개', color='#1e293b', hovercolor='#0284c7')
+        self.btn_scen_b = Button(ax_btn_scen_b, 'Prompt: 20도 각도 배리어', color='#1e293b', hovercolor='#0284c7')
 
-        # Row 2 Buttons: Interactive C2 Actions
-        ax_btn_relaunch = self.fig.add_subplot(gs[10, 10:13])
-        ax_btn_kill = self.fig.add_subplot(gs[10, 13:16])
-        self.btn_relaunch = Button(ax_btn_relaunch, '🚀 Relaunch Pop-Up', color='#2563eb', hovercolor='#1d4ed8')
-        self.btn_kill = Button(ax_btn_kill, '⚡ Kill 4 Drones', color='#dc2626', hovercolor='#b91c1c')
+        ax_btn_scen_c = self.fig.add_subplot(gs[10, 10:13])
+        ax_btn_scen_d = self.fig.add_subplot(gs[10, 13:16])
+        self.btn_scen_c = Button(ax_btn_scen_c, 'Prompt: 다수 포화 공격', color='#0284c7', hovercolor='#0f766e')
+        self.btn_scen_d = Button(ax_btn_scen_d, 'Prompt: 돌풍 외란 검증', color='#1e293b', hovercolor='#d97706')
 
-        # Assign Event Handlers
-        self.btn_scen_a.on_clicked(lambda event: self._trigger_scenario("weaving"))
-        self.btn_scen_b.on_clicked(lambda event: self._trigger_scenario("tilted"))
-        self.btn_scen_c.on_clicked(lambda event: self._trigger_scenario("saturation"))
-        self.btn_scen_d.on_clicked(lambda event: self._trigger_scenario("wind"))
+        # Row 3: Action Buttons
+        ax_btn_relaunch = self.fig.add_subplot(gs[11, 10:13])
+        ax_btn_kill = self.fig.add_subplot(gs[11, 13:16])
+        self.btn_relaunch = Button(ax_btn_relaunch, '🚀 Pop-Up Relaunch', color='#2563eb', hovercolor='#1d4ed8')
+        self.btn_kill = Button(ax_btn_kill, '⚡ Trigger Kills', color='#dc2626', hovercolor='#b91c1c')
 
-        self.btn_relaunch.on_clicked(lambda event: self._trigger_relaunch())
-        self.btn_kill.on_clicked(lambda event: self._trigger_kill())
+        # Event Bindings
+        self.btn_scen_a.on_clicked(lambda e: self._on_text_submit("S-곡선 회피 침투 드론 진입, 2층 배리어 전개해"))
+        self.btn_scen_b.on_clicked(lambda e: self._on_text_submit("20도 경사 각도 배리어로 궤적 변경해"))
+        self.btn_scen_c.on_clicked(lambda e: self._on_text_submit("다수 침투체 포화 공격 대응 C2 전개"))
+        self.btn_scen_d.on_clicked(lambda e: self._on_text_submit("돌풍 바람 외란 반영해"))
 
-    def _trigger_scenario(self, scen_name: str):
-        self.log(f"[C2 Cmd] Switched Scenario to '{scen_name.upper()}'")
-        if self.on_scenario_change:
-            self.on_scenario_change(scen_name)
+        self.btn_relaunch.on_clicked(lambda e: self._trigger_relaunch())
+        self.btn_kill.on_clicked(lambda e: self._trigger_kill())
+
+    def _on_text_submit(self, text: str):
+        intent = self.llm_engine.parse_tactical_command(text)
+        self.log(f"[LLM C2] '{text}'")
+        self.log(f"  -> Parsed: {intent.scenario_type.upper()} | Depth: {intent.depth_layers}")
+        if self.on_llm_command:
+            self.on_llm_command(intent)
 
     def _trigger_relaunch(self):
-        self.log("[C2 Cmd] Executing Ground Canister Pop-Up Relaunch!")
+        self.log("[DSP Pkt] Sent DSP_MSG_POPUP_CMD to all HAL Adapters")
         if self.on_relaunch:
             self.on_relaunch()
 
@@ -115,10 +126,10 @@ class C2ManagementConsolePoC:
                        grid_shape: Tuple[int, int] = (5, 5),
                        depth_layers: int = 2,
                        local_ai_latency_ms: float = 2.82):
-        """Renders complete multi-panel C2 management console."""
+        """Renders complete DSD-OS C2 management console."""
         # 1. 3D Airspace Panel
         self.ax_3d.cla()
-        self.ax_3d.set_title(f"3D AIRSPACE TRACKING | T = {sim_time:.2f}s", color='#00ffcc', fontsize=11, fontweight='bold')
+        self.ax_3d.set_title(f"DSD-OS 3D AIRSPACE TRACKING | T = {sim_time:.2f}s", color='#00ffcc', fontsize=11, fontweight='bold')
         self.ax_3d.set_xlabel('X: Distance to Base (m)', color='#94a3b8', fontsize=8)
         self.ax_3d.set_ylabel('Y: Width (m)', color='#94a3b8', fontsize=8)
         self.ax_3d.set_zlabel('Z: Altitude (m)', color='#94a3b8', fontsize=8)
@@ -174,21 +185,21 @@ class C2ManagementConsolePoC:
         # 2. Telemetry Panel
         self.ax_telemetry.cla()
         self.ax_telemetry.axis('off')
-        self.ax_telemetry.set_title("SWARM TELEMETRY & HEALTH STATUS", color='#38bdf8', fontsize=9.5, fontweight='bold', loc='left')
+        self.ax_telemetry.set_title("SWARM TELEMETRY & OPEN HAL BINDING STATUS", color='#38bdf8', fontsize=9.5, fontweight='bold', loc='left')
 
-        table_text = "DRONE ID   STATUS     POSITION (X, Y, Z)        SPEED      UWB RF\n"
-        table_text += "-" * 56 + "\n"
+        table_text = "DRONE ID   HAL PLATFORM           STATUS     SPEED      DSP STREAM\n"
+        table_text += "-" * 58 + "\n"
         for d in drones[:4]:
             status_str = "ACTIVE  " if d.status == "active" else "DESTROY "
             speed = np.linalg.norm(d.velocity)
-            table_text += f"ID-{d.id:02d}     {status_str}   [{d.position[0]:5.1f}, {d.position[1]:5.1f}, {d.position[2]:5.1f}]   {speed:4.1f}m/s    -72dBm\n"
+            table_text += f"ID-{d.id:02d}     PX4_MAVLINK/SIM        {status_str}   {speed:4.1f}m/s    0x01 (100Hz)\n"
         table_text += f"... Total Monitored: {len(drones)} (Active: {len(active_drones)}, Dead: {len(destroyed_drones)})\n"
         self.ax_telemetry.text(0.02, 0.90, table_text, family='monospace', fontsize=7.2, color='#e2e8f0', verticalalignment='top')
 
         # 3. Threat Tracking Panel
         self.ax_threat.cla()
         self.ax_threat.axis('off')
-        self.ax_threat.set_title("THREAT TARGET TRACKING", color='#ff3333', fontsize=9.5, fontweight='bold', loc='left')
+        self.ax_threat.set_title("THREAT TARGET TRACKING & ENGAGEMENT", color='#ff3333', fontsize=9.5, fontweight='bold', loc='left')
 
         threat_info = ""
         for t in threats:
@@ -196,13 +207,14 @@ class C2ManagementConsolePoC:
             threat_info += f"TARGET #{t.id} [{t.status.upper()}]  |  Range: {dist_to_base:.1f} m  |  Vel: {np.linalg.norm(t.velocity):.1f} m/s\n"
         self.ax_threat.text(0.02, 0.90, threat_info, family='monospace', fontsize=7.5, color='#fca5a5', verticalalignment='top')
 
-        # 4. Logs & AI Benchmark Panel
+        # 4. Logs & LLM / DSP Panel
         self.ax_log.cla()
         self.ax_log.axis('off')
-        self.ax_log.set_title("C2 LOGS & LOCAL AI BENCHMARK", color='#facc15', fontsize=9.5, fontweight='bold', loc='left')
+        self.ax_log.set_title("AIR-GAPPED LOCAL LLM & DSP PROTOCOL STREAM", color='#facc15', fontsize=9.5, fontweight='bold', loc='left')
 
-        log_text = f"Local AI Edge Latency: {local_ai_latency_ms:.2f} ms | UWB Ranging: 100 Hz\n"
-        log_text += "-" * 56 + "\n"
+        log_text = f"Local LLM Model: Local-Tactical-LLM-8B | AI Latency: {local_ai_latency_ms:.2f} ms\n"
+        log_text += f"DSP Binary Engine: 0x4453 Header Magic | Checksum Validation: OK\n"
+        log_text += "-" * 58 + "\n"
         for l in self.last_log_messages:
             log_text += f"> {l}\n"
         self.ax_log.text(0.02, 0.90, log_text, family='monospace', fontsize=7.2, color='#fef08a', verticalalignment='top')

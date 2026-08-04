@@ -8,18 +8,22 @@ from src.simulator.drone import Drone
 from src.simulator.threat import Threat
 from src.core.local_llm_c2 import AirGappedLocalLLMC2Engine, TacticalC2Intent
 from src.core.dsp_protocol import DefensiveSwarmProtocol
+from src.core.voice_announcer import TacticalVoiceAnnouncer
 
 class C2ManagementConsolePoC:
     """
-    DSD-OS Operational C2 Management Console PoC (지상 지휘통제 관리 콘솔 PoC).
-    Integrates Air-Gapped Local LLM Natural Language Tactical Command Box, 
-    Open DSP Binary Packet Stream Monitor, and Open Device HAL Adapter Status.
+    DSD-OS Military Operational C2 Touchscreen Console PoC.
+    HMI Architecture:
+      - Primary Control: Ruggedized Touchscreen Buttons (Deterministic Mechanical Execution)
+      - Auxiliary Feedback: Real-Time Tactical Natural Language Voice Speaker Announcements
+      - Auxiliary Input: Secondary Speech/Prompt Assistant
     """
-    def __init__(self, title: str = "DSD-OS OPERATIONAL C2 MANAGEMENT CONSOLE (PoC)"):
+    def __init__(self, title: str = "DSD-OS MILITARY TOUCHSCREEN C2 CONSOLE (PoC)"):
         plt.style.use('dark_background')
         self.fig = plt.figure(figsize=(16, 9.5), facecolor='#0b0f19')
-        self.fig.canvas.manager.set_window_title("DSD-OS Operational C2 Management Console PoC")
+        self.fig.canvas.manager.set_window_title("DSD-OS Military Touchscreen C2 Console PoC")
 
+        self.voice_announcer = TacticalVoiceAnnouncer(enabled=True, language="ko")
         self.llm_engine = AirGappedLocalLLMC2Engine()
 
         # Layout: 13x16 GridSpec
@@ -34,84 +38,104 @@ class C2ManagementConsolePoC:
         self.ax_telemetry.set_facecolor('#0f172a')
         self.ax_telemetry.axis('off')
 
-        # 3. Threat & HAL Status Panel (Middle right: rows 3-5, cols 10-16)
+        # 3. Threat Tracking Panel (Middle right: rows 3-5, cols 10-16)
         self.ax_threat = self.fig.add_subplot(gs[3:5, 10:16])
         self.ax_threat.set_facecolor('#0f172a')
         self.ax_threat.axis('off')
 
-        # 4. DSP Packet & LLM Log Panel (Middle-lower right: rows 5-8, cols 10-16)
+        # 4. System Logs & Voice Status Panel (Middle-lower right: rows 5-8, cols 10-16)
         self.ax_log = self.fig.add_subplot(gs[5:8, 10:16])
         self.ax_log.set_facecolor('#0f172a')
         self.ax_log.axis('off')
 
-        # Background for Controls
+        # Controls Background
         self.ax_cmd_bg = self.fig.add_subplot(gs[8:13, 10:16])
         self.ax_cmd_bg.set_facecolor('#0f172a')
         self.ax_cmd_bg.axis('off')
 
         self.last_log_messages: List[str] = [
-            "DSD-OS Core v1.0 Initialized.",
-            "HAL Adapter: Open Device Binding Active.",
-            "DSP Protocol Engine: 100 Hz Streaming.",
-            "Local LLM Tactical C2 Engine: READY."
+            "DSD-OS Military Touchscreen Console Ready.",
+            "Primary Control: Ruggedized Touchscreen UI Active.",
+            "Auxiliary Voice Announcer: ONLINE (Speaker Active).",
+            "DSP Binary Protocol Engine: 100 Hz Streaming."
         ]
 
         # Callbacks
-        self.on_llm_command: Optional[Callable[[TacticalC2Intent], None]] = None
+        self.on_scenario_change: Optional[Callable[[str], None]] = None
         self.on_kill_drones: Optional[Callable[[], None]] = None
         self.on_relaunch: Optional[Callable[[], None]] = None
 
-        self._setup_interactive_controls(gs)
+        self._setup_touchscreen_controls(gs)
 
-    def _setup_interactive_controls(self, gs):
-        """Setup Natural Language Text Box and C2 Buttons."""
-        # Row 1: Natural Language C2 Command Text Input
-        ax_textbox = self.fig.add_subplot(gs[8, 10:16])
-        self.txt_c2_cmd = TextBox(ax_textbox, 'Local LLM C2: ', initial='2층 각도 배리어 전개하고 파괴 드론 복구해', color='#1e293b', hovercolor='#0284c7')
-        self.txt_c2_cmd.on_submit(self._on_text_submit)
+    def _setup_touchscreen_controls(self, gs):
+        """Build Ruggedized Touchscreen Control Panel."""
+        # Row 1: Deterministic Touchscreen Action Buttons
+        ax_btn_launch = self.fig.add_subplot(gs[8, 10:13])
+        ax_btn_kill = self.fig.add_subplot(gs[8, 13:16])
+        self.btn_launch = Button(ax_btn_launch, '🚀 POP-UP LAUNCH (사출)', color='#2563eb', hovercolor='#1d4ed8')
+        self.btn_kill = Button(ax_btn_kill, '⚡ COUNTERMEASURE (피격)', color='#dc2626', hovercolor='#b91c1c')
 
-        # Row 2: Scenario Quick Buttons
-        ax_btn_scen_a = self.fig.add_subplot(gs[9, 10:13])
-        ax_btn_scen_b = self.fig.add_subplot(gs[9, 13:16])
-        self.btn_scen_a = Button(ax_btn_scen_a, 'Prompt: S-곡선 회피 전개', color='#1e293b', hovercolor='#0284c7')
-        self.btn_scen_b = Button(ax_btn_scen_b, 'Prompt: 20도 각도 배리어', color='#1e293b', hovercolor='#0284c7')
+        # Row 2: Touchscreen Mode Selectors
+        ax_btn_mode_a = self.fig.add_subplot(gs[9, 10:13])
+        ax_btn_mode_b = self.fig.add_subplot(gs[9, 13:16])
+        self.btn_mode_a = Button(ax_btn_mode_a, 'MODE: S-Weaving (회피)', color='#1e293b', hovercolor='#0284c7')
+        self.btn_mode_b = Button(ax_btn_mode_b, 'MODE: Tilted Net (경사)', color='#1e293b', hovercolor='#0284c7')
 
-        ax_btn_scen_c = self.fig.add_subplot(gs[10, 10:13])
-        ax_btn_scen_d = self.fig.add_subplot(gs[10, 13:16])
-        self.btn_scen_c = Button(ax_btn_scen_c, 'Prompt: 다수 포화 공격', color='#0284c7', hovercolor='#0f766e')
-        self.btn_scen_d = Button(ax_btn_scen_d, 'Prompt: 돌풍 외란 검증', color='#1e293b', hovercolor='#d97706')
+        ax_btn_mode_c = self.fig.add_subplot(gs[10, 10:13])
+        ax_btn_mode_d = self.fig.add_subplot(gs[10, 13:16])
+        self.btn_mode_c = Button(ax_btn_mode_c, 'MODE: Saturation (포화)', color='#0284c7', hovercolor='#0f766e')
+        self.btn_mode_d = Button(ax_btn_mode_d, 'MODE: Wind Gust (돌풍)', color='#1e293b', hovercolor='#d97706')
 
-        # Row 3: Action Buttons
-        ax_btn_relaunch = self.fig.add_subplot(gs[11, 10:13])
-        ax_btn_kill = self.fig.add_subplot(gs[11, 13:16])
-        self.btn_relaunch = Button(ax_btn_relaunch, '🚀 Pop-Up Relaunch', color='#2563eb', hovercolor='#1d4ed8')
-        self.btn_kill = Button(ax_btn_kill, '⚡ Trigger Kills', color='#dc2626', hovercolor='#b91c1c')
+        # Row 3: Voice Guidance Toggle & Secondary Input Box
+        ax_btn_voice = self.fig.add_subplot(gs[11, 10:13])
+        ax_txt_speech = self.fig.add_subplot(gs[11, 13:16])
+        self.btn_voice = Button(ax_btn_voice, '🔊 VOICE SPEAKER: ON', color='#059669', hovercolor='#047857')
+        self.txt_speech = TextBox(ax_txt_speech, 'Voice Prompt: ', initial='보조 음성 명령', color='#1e293b', hovercolor='#0284c7')
 
         # Event Bindings
-        self.btn_scen_a.on_clicked(lambda e: self._on_text_submit("S-곡선 회피 침투 드론 진입, 2층 배리어 전개해"))
-        self.btn_scen_b.on_clicked(lambda e: self._on_text_submit("20도 경사 각도 배리어로 궤적 변경해"))
-        self.btn_scen_c.on_clicked(lambda e: self._on_text_submit("다수 침투체 포화 공격 대응 C2 전개"))
-        self.btn_scen_d.on_clicked(lambda e: self._on_text_submit("돌풍 바람 외란 반영해"))
-
-        self.btn_relaunch.on_clicked(lambda e: self._trigger_relaunch())
+        self.btn_launch.on_clicked(lambda e: self._trigger_relaunch())
         self.btn_kill.on_clicked(lambda e: self._trigger_kill())
 
-    def _on_text_submit(self, text: str):
-        intent = self.llm_engine.parse_tactical_command(text)
-        self.log(f"[LLM C2] '{text}'")
-        self.log(f"  -> Parsed: {intent.scenario_type.upper()} | Depth: {intent.depth_layers}")
-        if self.on_llm_command:
-            self.on_llm_command(intent)
+        self.btn_mode_a.on_clicked(lambda e: self._change_mode("weaving"))
+        self.btn_mode_b.on_clicked(lambda e: self._change_mode("tilted"))
+        self.btn_mode_c.on_clicked(lambda e: self._change_mode("saturation"))
+        self.btn_mode_d.on_clicked(lambda e: self._change_mode("wind"))
+
+        self.btn_voice.on_clicked(self._toggle_voice)
+        self.txt_speech.on_submit(self._on_speech_input)
+
+    def _toggle_voice(self, event):
+        self.voice_announcer.enabled = not self.voice_announcer.enabled
+        state_str = "ON" if self.voice_announcer.enabled else "OFF"
+        color_str = "#059669" if self.voice_announcer.enabled else "#475569"
+        self.btn_voice.label.set_text(f"🔊 VOICE SPEAKER: {state_str}")
+        self.btn_voice.color = color_str
+        self.log(f"[C2 Voice] Tactical Speaker Guidance: {state_str}")
+        if self.voice_announcer.enabled:
+            self.voice_announcer.speak("전술 음성 스피커 안내 시스템이 활성화되었습니다.")
+
+    def _change_mode(self, mode_name: str):
+        self.log(f"[TOUCHSCREEN] Mode Switched to '{mode_name.upper()}'")
+        self.voice_announcer.announce_scenario_change(mode_name)
+        if self.on_scenario_change:
+            self.on_scenario_change(mode_name)
 
     def _trigger_relaunch(self):
-        self.log("[DSP Pkt] Sent DSP_MSG_POPUP_CMD to all HAL Adapters")
+        self.log("[TOUCHSCREEN] Deterministic Action: Pop-Up Launch Triggered!")
+        self.voice_announcer.announce_launch(50)
         if self.on_relaunch:
             self.on_relaunch()
 
     def _trigger_kill(self):
-        self.log("[EVENT] Hostile Countermeasure: 4 Drones Kills Triggered!")
+        self.log("[TOUCHSCREEN] Deterministic Action: Countermeasure Executed!")
+        self.voice_announcer.announce_self_healing(4)
         if self.on_kill_drones:
             self.on_kill_drones()
+
+    def _on_speech_input(self, text: str):
+        intent = self.llm_engine.parse_tactical_command(text)
+        self.log(f"[Aux Voice Input] '{text}' -> {intent.scenario_type.upper()}")
+        self._change_mode(intent.scenario_type)
 
     def log(self, msg: str):
         self.last_log_messages.append(msg)
@@ -126,7 +150,7 @@ class C2ManagementConsolePoC:
                        grid_shape: Tuple[int, int] = (5, 5),
                        depth_layers: int = 2,
                        local_ai_latency_ms: float = 2.82):
-        """Renders complete DSD-OS C2 management console."""
+        """Renders complete DSD-OS Touchscreen C2 Management Console."""
         # 1. 3D Airspace Panel
         self.ax_3d.cla()
         self.ax_3d.set_title(f"DSD-OS 3D AIRSPACE TRACKING | T = {sim_time:.2f}s", color='#00ffcc', fontsize=11, fontweight='bold')
@@ -185,7 +209,7 @@ class C2ManagementConsolePoC:
         # 2. Telemetry Panel
         self.ax_telemetry.cla()
         self.ax_telemetry.axis('off')
-        self.ax_telemetry.set_title("SWARM TELEMETRY & OPEN HAL BINDING STATUS", color='#38bdf8', fontsize=9.5, fontweight='bold', loc='left')
+        self.ax_telemetry.set_title("SWARM TELEMETRY & OPEN HAL STATUS", color='#38bdf8', fontsize=9.5, fontweight='bold', loc='left')
 
         table_text = "DRONE ID   HAL PLATFORM           STATUS     SPEED      DSP STREAM\n"
         table_text += "-" * 58 + "\n"
@@ -207,13 +231,13 @@ class C2ManagementConsolePoC:
             threat_info += f"TARGET #{t.id} [{t.status.upper()}]  |  Range: {dist_to_base:.1f} m  |  Vel: {np.linalg.norm(t.velocity):.1f} m/s\n"
         self.ax_threat.text(0.02, 0.90, threat_info, family='monospace', fontsize=7.5, color='#fca5a5', verticalalignment='top')
 
-        # 4. Logs & LLM / DSP Panel
+        # 4. Logs & Voice Status Panel
         self.ax_log.cla()
         self.ax_log.axis('off')
-        self.ax_log.set_title("AIR-GAPPED LOCAL LLM & DSP PROTOCOL STREAM", color='#facc15', fontsize=9.5, fontweight='bold', loc='left')
+        self.ax_log.set_title("MILITARY HMI LOGS & TACTICAL VOICE SPEAKER STATUS", color='#facc15', fontsize=9.5, fontweight='bold', loc='left')
 
-        log_text = f"Local LLM Model: Local-Tactical-LLM-8B | AI Latency: {local_ai_latency_ms:.2f} ms\n"
-        log_text += f"DSP Binary Engine: 0x4453 Header Magic | Checksum Validation: OK\n"
+        log_text = f"Primary Control: Touchscreen UI | Auxiliary Feedback: Tactical Voice Speaker ({'ACTIVE' if self.voice_announcer.enabled else 'DISABLED'})\n"
+        log_text += f"Last Speaker Voice Output: \"{self.voice_announcer.last_announcement}\"\n"
         log_text += "-" * 58 + "\n"
         for l in self.last_log_messages:
             log_text += f"> {l}\n"

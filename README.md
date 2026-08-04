@@ -3,7 +3,7 @@
 > **저가형 군집 드론 공중 배리어 요격 시스템 (LDS-AB) 및 C2 지휘통제 관리 콘솔 PoC**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Proprietary Commercial](https.img.shields.io/badge/License-Proprietary%20%2F%20Commercial-red.svg)](LICENSE)
 [![Status: Operational PoC](https://img.shields.io/badge/Status-Operational%20PoC-green.svg)]()
 
 ---
@@ -116,6 +116,9 @@ python verify_accuracy.py
 
 ---
 
-## 📄 License
+## 📄 License & Copyright (라이선스 및 저작권)
 
-This project is licensed under the MIT License.
+**Copyright (c) 2026 redsunjin. All Rights Reserved. (상업용 / 독점 라이선스)**
+
+본 프로젝트의 모든 소스코드, 3D 시뮬레이터, C2 콘솔 PoC, 알고리즘 및 문서 자산은 **redsunjin**의 독점 자산 및 상업용 지적 재산입니다. 저작권자의 사전 서면 동의 없는 무단 복제, 배포, 수정, 무단 도용 및 상업적 이용을 엄격히 금지합니다.
+

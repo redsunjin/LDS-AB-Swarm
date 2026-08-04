@@ -1,21 +1,21 @@
-# Low-Cost Defensive Swarm Aerial Barrier (LDS-AB)
+# DSD-OS: Defensive Swarm Drone Operating System
 
-> **저가형 군집 드론 공중 배리어 요격 시스템 (LDS-AB) 및 C2 지휘통제 관리 콘솔 PoC**
+> **오픈 디바이스 및 호환 프로토콜(DSP) 기반 저가형 방어 드론 전용 운용 OS (Defensive Swarm OS)**
+> **하드웨어 종속 탈피 (Hardware-Agnostic) + 군용 폐쇄망 로컬 LLM C2 솔루션**
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: Proprietary Commercial](https.img.shields.io/badge/License-Proprietary%20%2F%20Commercial-red.svg)](LICENSE)
-[![Status: Operational PoC](https://img.shields.io/badge/Status-Operational%20PoC-green.svg)]()
+[![License: Proprietary Commercial](https://img.shields.io/badge/License-Proprietary%20%2F%20Commercial-red.svg)](LICENSE)
+[![Architecture: DSD--OS v1.0](https://img.shields.io/badge/Architecture-DSD--OS%20v1.0-cyan.svg)]()
 
 ---
 
-## 📌 Project Overview (프로젝트 개요)
+## 🎯 1. Project Strategic Vision (프로젝트 전략 비전)
 
-**LDS-AB (Low-Cost Defensive Swarm Aerial Barrier)** 시스템은 순항 미사일, 회피 기동 자폭 드론 등 저고도 침투 위협을 방어하기 위해 저가형 드론 스웜을 수직 팝업(Pop-Up) 사출시켜 동적 3D 공중 요격 장막을 형성하는 방어 체계입니다.
+**DSD-OS (Defensive Swarm Drone Operating System)**는 특정 드론 기체나 발사대 하드웨어에 종속되지 않고, 소프트웨어 중심의 오픈 디바이스 지원을 지향하는 **방어 드론 전용 운용 OS (Software-Defined Swarm Defense OS)**입니다.
 
-- **하드웨어 단가 절감**: 개별 드론 카메라는 없으며, 외부 센서 좌표 전달 및 UWB 상대 위치 기반 분산 제어
-- **초고속 반응속도**: 로컬 AI 엣지 제어기 연산 지연시간 **< 3.0ms**
-- **Self-Healing 복구**: 드론 피격 파괴 시 **0.05초 만에 구멍 난 격자 자동 재배치**
-- **GPS-Denied 방해 대응**: 외부 GPS 없이 UWB 상대 거리 메쉬(100 Hz) 기반 형성 유지
+- **오픈 디바이스 & 표준 호환 프로토콜 (DSP)**: PX4, ArduPilot, ROS 2, 자작 FPV, 방산 군용 드론 등 모든 기종과 연동되는 **Defensive Swarm Protocol (DSP)** 정의
+- **군사 보안 폐쇄망 로컬 LLM C2 통합**: 외부 클라우드 연결 없이 온프레미스 장비에서 구동되는 **Local Edge LLM 기반 자연어 전장 판단 및 C2 지휘통제**
+- **군용 턴키 솔루션 납품 모델 (Mil-Spec Solution)**: 구독형 모델을 배제하고 방산 체계업체 및 군에 온프레미스 솔루션으로 납품되는 방방어 무기체계 소프트웨어
 
 ---
 

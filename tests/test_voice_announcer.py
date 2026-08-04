@@ -9,10 +9,10 @@ class TestTacticalVoiceAnnouncer(unittest.TestCase):
         self.assertIn("팝업 출격", announcer.last_announcement)
 
         announcer.announce_self_healing(4)
-        self.assertIn("0.05초", announcer.last_announcement)
+        self.assertIn("장막 재배치 완료", announcer.last_announcement)
 
         announcer.announce_interception_success()
-        self.assertIn("요격에 성공", announcer.last_announcement)
+        self.assertIn("요격 완료", announcer.last_announcement)
 
 if __name__ == "__main__":
     unittest.main()

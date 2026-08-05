@@ -21,7 +21,16 @@ class C2ManagementConsolePoC:
     def __init__(self, title: str = "DSD-OS MILITARY TOUCHSCREEN C2 CONSOLE (PoC)"):
         plt.style.use('dark_background')
         self.fig = plt.figure(figsize=(16, 9.5), facecolor='#0b0f19')
-        self.fig.canvas.manager.set_window_title("DSD-OS Military Touchscreen C2 Console PoC")
+        self.fig.canvas.manager.set_window_title("DSD-OS Tactical C2 Management Console v1.0")
+
+        # Load brand icon if supported by GUI backend
+        try:
+            import matplotlib.image as mpimg
+            icon_img = mpimg.imread('assets/favicon.png')
+            if hasattr(self.fig.canvas.manager, 'window') and hasattr(self.fig.canvas.manager.window, 'iconphoto'):
+                self.fig.canvas.manager.window.iconphoto(False, icon_img)
+        except Exception:
+            pass
 
         self.voice_announcer = TacticalVoiceAnnouncer(enabled=True, language="ko")
         self.llm_engine = AirGappedLocalLLMC2Engine()

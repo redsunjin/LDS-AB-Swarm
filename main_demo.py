@@ -125,6 +125,12 @@ def run_demo_scenario(scenario_type: str = "saturation", headless: bool = False,
             visualizer.render_console(env.drones, env.threats, target_nodes, env.current_time, 
                                        grid_shape=grid_shape, depth_layers=depth_layers, 
                                        local_ai_latency_ms=ai_latency_ms)
+            if step == 50:
+                try:
+                    visualizer.fig.savefig('assets/dsd_os_c2_console_screenshot.png', dpi=200, bbox_inches='tight', facecolor='#0b0f19')
+                    print("[Screenshot] Captured C2 Management Console GUI to 'assets/dsd_os_c2_console_screenshot.png'")
+                except Exception as e:
+                    print(f"[Screenshot Warning] Failed to save screenshot ({e})")
 
         # Check Interceptions
         intercepted_count = sum(1 for t in env.threats if t.status == "intercepted")

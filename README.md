@@ -15,9 +15,12 @@
 
 **DSD-OS (Defensive Swarm Drone Operating System)**는 저고도 침투 위협(순항미사일, 자폭드론 등) 방어를 위한 드론 스웜 공중 배리어 운용 OS입니다. 특정 드론 기체 및 사출 발사대에 종속되지 않는 하드웨어 아그노스틱 소프트웨어 구조를 구현합니다.
 
+![DSD-OS C2 Console Screenshot](assets/dsd_os_c2_console_screenshot.png)
+
 - **표준 호환 프로토콜 (DSP)**: PX4, ArduPilot, ROS 2 등 이종 비행제어기(FCS) 연동을 위한 오픈 바이너리 패킷 규격 제정
 - **군 폐쇄망 로컬 LLM C2**: 외부 클라우드 통신 차단 전장 환경용 온프레미스 전술 LLM C2 통합
 - **실물 하드웨어 절감**: 개별 드론 카메라 배제, UWB 상대거리 메쉬(100Hz) 및 지상 C2 레이더 궤적 연동
+- **C2 관제 콘솔 매뉴얼**: 상세 운용법은 [DSD_OS_C2_Console_User_Manual.md](DSD_OS_C2_Console_User_Manual.md) 참조
 
 ---
 

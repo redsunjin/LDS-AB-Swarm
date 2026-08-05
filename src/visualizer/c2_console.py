@@ -236,16 +236,18 @@ class C2ManagementConsolePoC:
         table_text += f"... Total Monitored: {len(drones)} (Active: {len(active_drones)}, Dead: {len(destroyed_drones)})\n"
         self.ax_telemetry.text(0.02, 0.90, table_text, family='monospace', fontsize=7.2, color='#e2e8f0', verticalalignment='top')
 
-        # 3. Threat Tracking Panel
+        # 3. Threat Tracking & Tactical Environment Panel
         self.ax_threat.cla()
         self.ax_threat.axis('off')
-        self.ax_threat.set_title("THREAT TARGET TRACKING & ENGAGEMENT", color='#ff3333', fontsize=9.5, fontweight='bold', loc='left')
+        self.ax_threat.set_title("OPERATIONAL SECTOR ALPHA & THREAT IFF TRACKING", color='#ff3333', fontsize=9.5, fontweight='bold', loc='left')
 
-        threat_info = ""
+        threat_info = "SECTOR: ALPHA (BASE X=20m) | ENV: GPS-DENIED (JAMMING HIGH) | LAUNCHER: 50-CELL COLD-GAS (220 BAR)\n"
+        threat_info += "-" * 72 + "\n"
         for t in threats:
             dist_to_base = abs(t.position[0] - 20.0)
-            threat_info += f"TARGET #{t.id} [{t.status.upper()}]  |  Range: {dist_to_base:.1f} m  |  Vel: {np.linalg.norm(t.velocity):.1f} m/s\n"
-        self.ax_threat.text(0.02, 0.90, threat_info, family='monospace', fontsize=7.5, color='#fca5a5', verticalalignment='top')
+            tti = dist_to_base / max(1.0, np.linalg.norm(t.velocity))
+            threat_info += f"IFF: HOSTILE-TARGET #{t.id} [{t.status.upper()}] | Range: {dist_to_base:5.1f}m | Speed: {np.linalg.norm(t.velocity):4.1f}m/s | Est TTI: {tti:4.1f}s\n"
+        self.ax_threat.text(0.02, 0.90, threat_info, family='monospace', fontsize=7.2, color='#fca5a5', verticalalignment='top')
 
         # 4. Logs & Voice Status Panel
         self.ax_log.cla()

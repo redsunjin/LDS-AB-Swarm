@@ -91,16 +91,16 @@ class C2ManagementConsolePoC:
         self.btn_launch = Button(ax_btn_launch, '🚀 POP-UP LAUNCH (사출)', color='#2563eb', hovercolor='#1d4ed8')
         self.btn_kill = Button(ax_btn_kill, '⚡ COUNTERMEASURE (피격)', color='#dc2626', hovercolor='#b91c1c')
 
-        # Row 2: Touchscreen Mode Selectors
+        # Row 2: 360° Omnidirectional Morphing Net Selectors
         ax_btn_mode_a = self.fig.add_subplot(gs[9, 10:13])
         ax_btn_mode_b = self.fig.add_subplot(gs[9, 13:16])
-        self.btn_mode_a = Button(ax_btn_mode_a, 'MODE: S-Weaving (회피)', color='#1e293b', hovercolor='#0284c7')
-        self.btn_mode_b = Button(ax_btn_mode_b, 'MODE: Tilted Net (경사)', color='#1e293b', hovercolor='#0284c7')
+        self.btn_mode_a = Button(ax_btn_mode_a, 'NET: 360° Omni Cylinder', color='#0284c7', hovercolor='#0f766e')
+        self.btn_mode_b = Button(ax_btn_mode_b, 'NET: Top Umbrella Dome', color='#1e293b', hovercolor='#0284c7')
 
         ax_btn_mode_c = self.fig.add_subplot(gs[10, 10:13])
         ax_btn_mode_d = self.fig.add_subplot(gs[10, 13:16])
-        self.btn_mode_c = Button(ax_btn_mode_c, 'MODE: Saturation (포화)', color='#0284c7', hovercolor='#0f766e')
-        self.btn_mode_d = Button(ax_btn_mode_d, 'MODE: Wind Gust (돌풍)', color='#1e293b', hovercolor='#d97706')
+        self.btn_mode_c = Button(ax_btn_mode_c, 'NET: V-Shape Wedge', color='#1e293b', hovercolor='#0f766e')
+        self.btn_mode_d = Button(ax_btn_mode_d, 'NET: Staggered Wall', color='#1e293b', hovercolor='#d97706')
 
         # Row 3: Voice Guidance Toggle & Secondary Input Box
         ax_btn_voice = self.fig.add_subplot(gs[11, 10:13])
@@ -186,6 +186,15 @@ class C2ManagementConsolePoC:
 
         # Defense Base Anchor Line & Radar Coverage Hemisphere Wireframe
         self.ax_3d.plot([20, 20], [-25, 25], [0, 0], color='#00ffcc', linestyle='-', linewidth=2.5, alpha=0.8, label='Base Anchor (X=20m)')
+
+        # Render Protected High-Value Assets (HVA Tiers)
+        self.ax_3d.scatter([10.0], [0.0], [2.0], color='#ef4444', s=140, marker='^', label='HVA Tier 1: C2 Bunker')
+        self.ax_3d.scatter([15.0], [12.0], [4.0], color='#facc15', s=110, marker='s', label='HVA Tier 2: Radar Array')
+        self.ax_3d.scatter([18.0], [-15.0], [2.0], color='#38bdf8', s=90, marker='o', label='HVA Tier 3: Ammo Depot')
+
+        # Render Launcher Batteries (Battery Alpha & Bravo Coords)
+        self.ax_3d.scatter([25.0], [-10.0], [1.0], color='#00ffcc', s=100, marker='d', label='Launcher: Battery Alpha')
+        self.ax_3d.scatter([25.0], [10.0], [1.0], color='#00ffcc', s=100, marker='d', label='Launcher: Battery Bravo')
 
         if target_nodes is not None and len(target_nodes) > 0:
             nodes_arr = np.array(target_nodes)

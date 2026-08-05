@@ -38,7 +38,8 @@
                                      |
                                      v
 +-------------------------------------------------------------------------+
-|  Layer 1: Hardware Abstraction Layer (HAL - 이종 하드웨어 이식)         |
+|  Layer 1: Hardware Abstraction Layer (HAL) & Virtual Hardware Testbed   |
+|  - VirtualHardwareEmulationTestbed: 50-Node DSP Protocol Emulation Loop |
 |  [PX4 System]  [ArduPilot System]  [Betaflight/FPV]  [Custom Military]  |
 +-------------------------------------------------------------------------+
 ```

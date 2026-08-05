@@ -7,7 +7,7 @@
 
 ## 🎨 1. Primary Brand Logo Mark (미니멀 AI 딥테크 로고)
 
-![DSD-OS Minimal AI Deeptech Logo](/Users/tdax/.gemini/antigravity-ide/brain/f432b5b1-2e40-4b31-abc8-99d356ee1e49/dsd_os_logo_ai_minimal_1785904782468.png)
+![DSD-OS Minimal AI Deeptech Logo](assets/dsd_os_logo_ai_minimal.png)
 
 ### 디자인 컨셉 & 상징성 (AI Era Deeptech Aesthetics):
 1. **정교한 플래티넘 미니멀 기하학 (Monochrome Platinum Geometry)**: 과도한 화려함과 게임 스타일을 배제하고, 절제된 기하학적 육각 방어 링 모티브 적용.
@@ -18,7 +18,7 @@
 
 ## 🖥️ 2. AI-Native Tactical C2 UI Interface (AI 기반 C2 전술 콘솔)
 
-![DSD-OS Modern AI C2 UI Console](/Users/tdax/.gemini/antigravity-ide/brain/f432b5b1-2e40-4b31-abc8-99d356ee1e49/dsd_os_c2_ai_modern_1785904795721.png)
+![DSD-OS Modern AI C2 UI Console](assets/dsd_os_c2_ai_modern.png)
 
 ---
 

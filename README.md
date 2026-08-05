@@ -87,9 +87,13 @@ source .venv/bin/activate
 uv pip install numpy scipy matplotlib pytest
 ```
 
-### C2 운용 콘솔 PoC 실행
+### C2 운용 콘솔 PoC 실행 (Python Desktop & Web GPU Console)
 ```bash
+# 1. Python Matplotlib 데스크톱 C2 콘솔 실행
 python main_demo.py --scenario saturation
+
+# 2. Modern 360° GPU Web C2 OS 콘솔 열기
+open c2_web_console.html
 ```
 
 ### 몬테카를로 물리 검증 스크립트 실행

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSD-OS 360° Tactical C2 Operating System Console</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0b0f19; color: #e2e8f0; overflow: hidden; }
+        #canvas-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* Modern 360° C2 OS Header Bar */
+        #c2-header {
+            position: absolute; top: 0; left: 0; width: 100%; z-index: 10;
+            background: rgba(13, 17, 23, 0.92); backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0, 255, 204, 0.3);
+            padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .brand-title { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 15px; color: #00ffcc; letter-spacing: 1px; }
+        .brand-badge { background: #0284c7; color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+
+        /* Left Panel: 360° Tactical Controls & HVA Protection */
+        #left-panel {
+            position: absolute; top: 65px; left: 20px; z-index: 10; width: 380px;
+            background: rgba(15, 23, 42, 0.90); backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 204, 0.25); border-radius: 12px;
+            padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column; gap: 14px;
+        }
+        
+        /* Right Panel: 360° Radar Scope & Swarm Telemetry */
+        #right-panel {
+            position: absolute; top: 65px; right: 20px; z-index: 10; width: 380px;
+            background: rgba(15, 23, 42, 0.90); backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 204, 0.25); border-radius: 12px;
+            padding: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.7); display: flex; flex-direction: column; gap: 14px;
+        }
+
+        h2 { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; margin-bottom: 6px; }
+
+        .stat-box { background: rgba(30, 41, 59, 0.7); border-radius: 8px; padding: 10px; font-size: 11px; border: 1px solid rgba(255,255,255,0.06); }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .stat-val { font-weight: 700; color: #38bdf8; }
+
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        button {
+            background: #1e293b; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.12);
+            padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;
+            transition: all 0.2s ease; text-align: center;
+        }
+        button:hover { background: #0284c7; color: #fff; border-color: #00ffcc; }
+        button.active { background: #0284c7; color: #fff; border-color: #00ffcc; box-shadow: 0 0 12px rgba(0,255,204,0.4); }
+        button.btn-danger { background: #dc2626; color: #fff; }
+        button.btn-action { background: #2563eb; color: #fff; }
+
+        /* 360° PPI Radar Scope Canvas */
+        #radar-scope { width: 100%; height: 180px; background: #090d16; border-radius: 8px; border: 1px solid rgba(0,255,204,0.3); }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <!-- C2 Header Bar -->
+    <div id="c2-header">
+        <div class="brand-title">
+            <img src="assets/dsd_os_logo_ai_minimal.png" style="height: 28px; width: 28px; border-radius: 4px;">
+            <span>DSD-OS 360° TACTICAL C2 OPERATING SYSTEM</span>
+            <span class="brand-badge">AIR-GAPPED MIL-SPEC v1.0</span>
+        </div>
+        <div style="font-size: 11px; color: #94a3b8; display: flex; gap: 16px;">
+            <span>SECTOR: <b style="color:#00ffcc;">ALPHA (X=20m)</b></span>
+            <span>UWB MESH: <b style="color:#38bdf8;">100 Hz ACTIVE</b></span>
+            <span>ENCRYPTION: <b style="color:#4ade80;">AES-256 HMAC PASS</b></span>
+        </div>
+    </div>
+
+    <!-- Left Panel: 360° Controls & HVA Protection -->
+    <div id="left-panel">
+        <h2>Protected HVA Tiers</h2>
+        <div class="stat-box">
+            <div class="stat-row"><span>HVA Tier 1: C2 Bunker</span><span class="stat-val" style="color:#ef4444;">PRIORITY 1.0 (X=10m)</span></div>
+            <div class="stat-row"><span>HVA Tier 2: Radar Array</span><span class="stat-val" style="color:#facc15;">PRIORITY 0.8 (X=15m)</span></div>
+            <div class="stat-row"><span>HVA Tier 3: Ammo Depot</span><span class="stat-val" style="color:#38bdf8;">PRIORITY 0.5 (X=18m)</span></div>
+        </div>
+
+        <h2>360° Morphing Net Topology</h2>
+        <div class="btn-grid">
+            <button id="btn-omni-cyl" class="active">NET: 360° Omni Cylinder</button>
+            <button id="btn-top-umbrella">NET: Top Umbrella Dome</button>
+            <button id="btn-v-wedge">NET: V-Shape Wedge</button>
+            <button id="btn-staggered-wall">NET: Staggered Wall</button>
+        </div>
+
+        <h2>Physical Actions & HMI</h2>
+        <div class="btn-grid">
+            <button id="btn-relaunch" class="btn-action">🚀 POP-UP LAUNCH</button>
+            <button id="btn-kill" class="btn-danger">⚡ COUNTERMEASURE</button>
+        </div>
+    </div>
+
+    <!-- Right Panel: 360° Radar Scope & Telemetry -->
+    <div id="right-panel">
+        <h2>360° PPI Radar Scope (Omnidirectional)</h2>
+        <canvas id="radar-scope"></canvas>
+
+        <h2>Swarm Telemetry & DSP Stream</h2>
+        <div class="stat-box" id="telemetry-box" style="font-family: monospace; font-size: 10px;">
+            Active Drones: 50 / 50 | Mesh Integrity: 100%<br>
+            DSP Stream: 0x4453 MAGIC OK | Checksum: PASS<br>
+            Avg Swarm Transit Time: 0.62 sec
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Three.js 3D GPU Scene Setup ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x0b0f19, 0.0018);
+
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(130, 80, 140);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.target.set(20, 20, 0);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0x00ffcc, 1.2);
+        dirLight.position.set(100, 150, 100);
+        scene.add(dirLight);
+
+        // 3D GIS Elevation Terrain Mesh
+        const terrainGeom = new THREE.PlaneGeometry(350, 250, 60, 40);
+        terrainGeom.rotateX(-Math.PI / 2);
+        const posAttr = terrainGeom.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+            let x = posAttr.getX(i);
+            let z = posAttr.getZ(i);
+            let height = Math.sin(x / 25.0) * Math.cos(z / 18.0) * 7.0 + Math.cos((x + z) / 20.0) * 3.5;
+            posAttr.setY(i, height - 2.0);
+        }
+        terrainGeom.computeVertexNormals();
+        const terrainMat = new THREE.MeshStandardMaterial({ color: 0x161b22, wireframe: true, transparent: true, opacity: 0.3 });
+        const terrainMesh = new THREE.Mesh(terrainGeom, terrainMat);
+        terrainMesh.position.set(30, -0.5, 0);
+        scene.add(terrainMesh);
+
+        // 360° Radar Coverage Dome
+        const domeGeom = new THREE.SphereGeometry(110, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const domeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true, transparent: true, opacity: 0.08 });
+        const domeMesh = new THREE.Mesh(domeGeom, domeMat);
+        domeMesh.position.set(20, 0, 0);
+        scene.add(domeMesh);
+
+        // HVA Markers
+        function addHVAMarker(x, y, z, color, size) {
+            const geom = new THREE.BoxGeometry(size, size * 2, size);
+            const mat = new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.5 });
+            const mesh = new THREE.Mesh(geom, mat);
+            mesh.position.set(x, y, z);
+            scene.add(mesh);
+        }
+        addHVAMarker(10, 2, 0, 0xef4444, 3);   // Tier 1 Bunker
+        addHVAMarker(15, 3, 12, 0xfacc15, 2.5); // Tier 2 Radar
+        addHVAMarker(18, 2, -15, 0x38bdf8, 2); // Tier 3 Ammo
+
+        // Drones Setup
+        let currentMode = "OMNI_CYLINDRICAL_PERIMETER";
+        let simTime = 0;
+        let drones = [];
+        const numDrones = 50;
+        const droneGroup = new THREE.Group();
+        scene.add(droneGroup);
+
+        const droneGeom = new THREE.SphereGeometry(1.2, 16, 16);
+        const activeMat = new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.3 });
+        const deadMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5 });
+
+        for (let i = 0; i < numDrones; i++) {
+            const mesh = new THREE.Mesh(droneGeom, activeMat);
+            mesh.position.set(20, 0.8, 0);
+            droneGroup.add(mesh);
+            drones.push({ mesh: mesh, status: 'active', pos: new THREE.Vector3(20, 0.8, 0) });
+        }
+
+        // Threat Cone Mesh
+        const threatGeom = new THREE.ConeGeometry(2.5, 8, 12);
+        threatGeom.rotateZ(Math.PI / 2);
+        const threatMat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x990000 });
+        const threatMesh = new THREE.Mesh(threatGeom, threatMat);
+        scene.add(threatMesh);
+
+        // --- 2. 360° PPI Radar Scope 2D Canvas ---
+        const radarCanvas = document.getElementById('radar-scope');
+        const rCtx = radarCanvas.getContext('2d');
+        let sweepAngle = 0;
+
+        function drawRadarScope() {
+            const w = radarCanvas.width = radarCanvas.clientWidth;
+            const h = radarCanvas.height = radarCanvas.clientHeight;
+            const cx = w / 2, cy = h / 2, radius = Math.min(w, h) / 2 - 10;
+
+            rCtx.clearRect(0, 0, w, h);
+            rCtx.strokeStyle = 'rgba(0, 255, 204, 0.3)';
+            rCtx.lineWidth = 1;
+
+            // Concentric Rings & Crosshair
+            for (let r = 1; r <= 3; r++) {
+                rCtx.beginPath();
+                rCtx.arc(cx, cy, (radius / 3) * r, 0, Math.PI * 2);
+                rCtx.stroke();
+            }
+            rCtx.beginPath(); rCtx.moveTo(cx - radius, cy); rCtx.lineTo(cx + radius, cy); rCtx.stroke();
+            rCtx.beginPath(); rCtx.moveTo(cx, cy - radius); rCtx.lineTo(cx, cy + radius); rCtx.stroke();
+
+            // Sweep Line
+            sweepAngle += 0.03;
+            rCtx.strokeStyle = '#00ffcc';
+            rCtx.lineWidth = 2;
+            rCtx.beginPath();
+            rCtx.moveTo(cx, cy);
+            rCtx.lineTo(cx + Math.cos(sweepAngle) * radius, cy + Math.sin(sweepAngle) * radius);
+            rCtx.stroke();
+
+            // Threat Blip
+            let threatAngle = Math.atan2(threatMesh.position.z, threatMesh.position.x - 20);
+            let threatDist = Math.hypot(threatMesh.position.x - 20, threatMesh.position.z) / 200 * radius;
+            rCtx.fillStyle = '#ff3333';
+            rCtx.beginPath();
+            rCtx.arc(cx + Math.cos(threatAngle) * threatDist, cy + Math.sin(threatAngle) * threatDist, 4, 0, Math.PI * 2);
+            rCtx.fill();
+        }
+
+        // --- 3. Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            simTime += 0.03;
+
+            let threatX = 180 - (simTime * 28.0);
+            let threatY = 25;
+            let threatZ = 0;
+            if (threatX < 15) simTime = 0;
+
+            threatMesh.position.set(threatX, threatY, threatZ);
+
+            // Calculate 360° Morphing Net Targets
+            drones.forEach((d, idx) => {
+                if (d.status === 'active') {
+                    let targetX = 20, targetY = 20, targetZ = 0;
+
+                    if (currentMode === "OMNI_CYLINDRICAL_PERIMETER") {
+                        let ring = Math.floor(idx / 16);
+                        let angle = (idx % 16) * (Math.PI * 2 / 16) + (ring * 0.2);
+                        targetX = 20 + Math.cos(angle) * (25 + ring * 3);
+                        targetZ = Math.sin(angle) * (25 + ring * 3);
+                        targetY = 10 + ring * 12;
+                    } else if (currentMode === "TOP_COVER_UMBRELLA") {
+                        let ring = Math.floor(idx / 16);
+                        let angle = (idx % 16) * (Math.PI * 2 / 16);
+                        targetX = 20 + Math.cos(angle) * ((ring + 1) * 8);
+                        targetZ = Math.sin(angle) * ((ring + 1) * 8);
+                        targetY = 40 - (ring * 3);
+                    } else if (currentMode === "MULTI_SECTOR_V_SHAPE") {
+                        let arm = idx % 2;
+                        let posInArm = Math.floor(idx / 2);
+                        let vAngle = (arm === 0 ? 0.7 : -0.7);
+                        targetX = 20 + posInArm * 2.5 * Math.cos(vAngle);
+                        targetZ = posInArm * 2.5 * Math.sin(vAngle);
+                        targetY = (posInArm % 5) * 5.5 + 5;
+                    } else { // STAGGERED_WALL
+                        let row = Math.floor(idx / 5) % 5;
+                        let col = idx % 5;
+                        let layer = Math.floor(idx / 25);
+                        targetX = 20 - (layer * 6);
+                        targetY = threatY + (row - 2) * 7.0;
+                        targetZ = (col - 2) * 7.0 + (layer === 1 ? 3.5 : 0);
+                    }
+
+                    d.pos.x += (targetX - d.pos.x) * 0.1;
+                    d.pos.y += (targetY - d.pos.y) * 0.1;
+                    d.pos.z += (targetZ - d.pos.z) * 0.1;
+                    d.mesh.position.copy(d.pos);
+                }
+            });
+
+            drawRadarScope();
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Mode Switching
+        ['btn-omni-cyl', 'btn-top-umbrella', 'btn-v-wedge', 'btn-staggered-wall'].forEach(id => {
+            document.getElementById(id).addEventListener('click', (e) => {
+                document.querySelectorAll('#left-panel button').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                if (id === 'btn-omni-cyl') currentMode = "OMNI_CYLINDRICAL_PERIMETER";
+                else if (id === 'btn-top-umbrella') currentMode = "TOP_COVER_UMBRELLA";
+                else if (id === 'btn-v-wedge') currentMode = "MULTI_SECTOR_V_SHAPE";
+                else currentMode = "DIRECTIONAL_STAGGERED_WALL";
+            });
+        });
+
+        document.getElementById('btn-relaunch').addEventListener('click', () => { simTime = 0; });
+        document.getElementById('btn-kill').addEventListener('click', () => {
+            [4, 12, 24, 36].forEach(i => {
+                if (drones[i]) { drones[i].status = 'dead'; drones[i].mesh.material = deadMat; }
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

@@ -19,7 +19,14 @@ class C2ManagementConsolePoC:
       - Auxiliary Input: Secondary Speech/Prompt Assistant
     """
     def __init__(self, title: str = "DSD-OS MILITARY TOUCHSCREEN C2 CONSOLE (PoC)"):
+        import platform
         plt.style.use('dark_background')
+        if platform.system() == 'Darwin':
+            plt.rcParams['font.family'] = 'AppleGothic'
+        elif platform.system() == 'Windows':
+            plt.rcParams['font.family'] = 'Malgun Gothic'
+        plt.rcParams['axes.unicode_minus'] = False
+
         self.fig = plt.figure(figsize=(16, 9.5), facecolor='#0b0f19')
         self.fig.canvas.manager.set_window_title("DSD-OS Tactical C2 Management Console v1.0")
 

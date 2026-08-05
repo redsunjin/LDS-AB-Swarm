@@ -63,8 +63,9 @@
                                      |
                                      v
 +-------------------------------------------------------------------------+
-|  Layer 1: 하드웨어 추상화 계층 (HAL)                                     |
-|  [PX4 Autopilot]  [ArduPilot]  [Generic FPV]  [Simulated HAL]           |
+|  Layer 1: 하드웨어 추상화 계층 (HAL) & 가상 하드웨어 테스트베드         |
+|  - VirtualHardwareEmulationTestbed: 실기체 동급 DSP 프로토콜 루프 시뮬 |
+|  [PX4 System]  [ArduPilot System]  [Generic FPV]  [Simulated HAL]           |
 +-------------------------------------------------------------------------+
 ```
 

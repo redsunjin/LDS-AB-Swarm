@@ -50,6 +50,7 @@
 +-------------------------------------------------------------------------+
 |  Layer 2: 방어 드론 오픈 프로토콜 (DSP, Defensive Swarm Protocol)       |
 |  - 바이너리 패킷 규격 (DSP_HEARTBEAT, DSP_APF_THRUST_VECTOR 등)         |
+|  - DSPSecurityEngine: AES-256 HMAC 패킷 암호화 및 Anti-Replay Nonce 검증|
 +-------------------------------------------------------------------------+
                                      |
                                      v

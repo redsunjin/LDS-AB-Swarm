@@ -167,16 +167,25 @@ class C2ManagementConsolePoC:
                        depth_layers: int = 2,
                        local_ai_latency_ms: float = 2.82):
         """Renders complete DSD-OS Touchscreen C2 Management Console."""
-        # 1. 3D Airspace Panel
+        # 1. 3D Airspace Panel with GIS Topographic Terrain & Radar Dome
         self.ax_3d.cla()
-        self.ax_3d.set_title(f"DSD-OS 3D AIRSPACE TRACKING | T = {sim_time:.2f}s", color='#00ffcc', fontsize=11, fontweight='bold')
+        self.ax_3d.set_title(f"DSD-OS 3D GIS TERRAIN & AIRSPACE TRACKING | T = {sim_time:.2f}s", color='#00ffcc', fontsize=11, fontweight='bold')
         self.ax_3d.set_xlabel('X: Distance to Base (m)', color='#94a3b8', fontsize=8)
         self.ax_3d.set_ylabel('Y: Width (m)', color='#94a3b8', fontsize=8)
         self.ax_3d.set_zlabel('Z: Altitude (m)', color='#94a3b8', fontsize=8)
-        self.ax_3d.grid(True, linestyle='--', alpha=0.25)
+        self.ax_3d.grid(True, linestyle='--', alpha=0.20)
         self.ax_3d.view_init(elev=22, azim=135)
 
-        self.ax_3d.plot([20, 20], [-20, 20], [0, 0], color='#00ffcc', linestyle='-', linewidth=2.5, alpha=0.7, label='Base Anchor (X=20m)')
+        # Render 3D GIS Topographic Terrain Elevation Mesh
+        gx = np.linspace(-20, 200, 30)
+        gy = np.linspace(-40, 40, 30)
+        GX, GY = np.meshgrid(gx, gy)
+        GZ = 3.5 * np.sin(GX / 35.0) * np.cos(GY / 25.0) + 1.5 * np.cos((GX + GY) / 30.0)
+        self.ax_3d.plot_surface(GX, GY, GZ, cmap='gist_earth', alpha=0.25, rstride=2, cstride=2, linewidth=0.2, edgecolor='#1e293b')
+        self.ax_3d.contour(GX, GY, GZ, zdir='z', offset=-5, cmap='copper', alpha=0.4)
+
+        # Defense Base Anchor Line & Radar Coverage Hemisphere Wireframe
+        self.ax_3d.plot([20, 20], [-25, 25], [0, 0], color='#00ffcc', linestyle='-', linewidth=2.5, alpha=0.8, label='Base Anchor (X=20m)')
 
         if target_nodes is not None and len(target_nodes) > 0:
             nodes_arr = np.array(target_nodes)

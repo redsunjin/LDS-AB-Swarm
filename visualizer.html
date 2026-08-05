@@ -138,9 +138,28 @@
         dirLight.position.set(100, 150, 100);
         scene.add(dirLight);
 
-        const gridHelper = new THREE.GridHelper(300, 30, 0x00ffcc, 0x1e293b);
-        gridHelper.position.set(30, 0, 0);
-        scene.add(gridHelper);
+        // 3D GIS Topographic Terrain Mesh with Elevation Displacement
+        const terrainGeom = new THREE.PlaneGeometry(300, 200, 50, 40);
+        terrainGeom.rotateX(-Math.PI / 2);
+        const posAttr = terrainGeom.attributes.position;
+        for (let i = 0; i < posAttr.count; i++) {
+            let x = posAttr.getX(i);
+            let z = posAttr.getZ(i);
+            let height = Math.sin(x / 25.0) * Math.cos(z / 18.0) * 6.5 + Math.cos((x + z) / 20.0) * 3.0;
+            posAttr.setY(i, height - 2.0);
+        }
+        terrainGeom.computeVertexNormals();
+        const terrainMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, wireframe: true, transparent: true, opacity: 0.35 });
+        const terrainMesh = new THREE.Mesh(terrainGeom, terrainMat);
+        terrainMesh.position.set(30, -0.5, 0);
+        scene.add(terrainMesh);
+
+        // 3D Radar Engagement Coverage Dome Wireframe
+        const domeGeom = new THREE.SphereGeometry(110, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+        const domeMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true, transparent: true, opacity: 0.08 });
+        const domeMesh = new THREE.Mesh(domeGeom, domeMat);
+        domeMesh.position.set(20, 0, 0);
+        scene.add(domeMesh);
 
         // Canister Launch Pads
         const launcherGroup = new THREE.Group();

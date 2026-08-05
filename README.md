@@ -1,5 +1,7 @@
 # DSD-OS: Defensive Swarm Drone Operating System
 
+![DSD-OS Minimal AI Deeptech Logo](/Users/tdax/.gemini/antigravity-ide/brain/f432b5b1-2e40-4b31-abc8-99d356ee1e49/dsd_os_logo_ai_minimal_1785904782468.png)
+
 > **오픈 디바이스 및 호환 프로토콜(DSP) 기반 방어 드론 운용 OS (Defensive Swarm OS)**
 > **하드웨어 아그노스틱 (Hardware-Agnostic) + 군 폐쇄망 로컬 LLM C2 솔루션**
 

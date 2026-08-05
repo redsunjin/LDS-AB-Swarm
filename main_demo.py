@@ -6,10 +6,11 @@ from src.simulator.environment import SimulationEnvironment
 from src.core.mesh_generator import MeshGenerator
 from src.core.local_ai_controller import LocalAISwarmController
 from src.simulator.threat_factory import ThreatFactory
+from src.simulator.hardware_emulator import VirtualHardwareEmulationTestbed
 
 def run_demo_scenario(scenario_type: str = "saturation", headless: bool = False, max_steps: int = 220):
     print("=" * 70)
-    print(f"  LDS-AB Multi-Layer & Multi-Angle Swarm Barrier Demo [{scenario_type.upper()}]  ")
+    print(f"  DSD-OS Tactical C2 Swarm Barrier Demo [{scenario_type.upper()}]  ")
     print("=" * 70)
 
     env = SimulationEnvironment(time_step=0.05)
@@ -64,6 +65,9 @@ def run_demo_scenario(scenario_type: str = "saturation", headless: bool = False,
         drone = Drone(id=i+1, position=init_pos, max_speed=40.0, max_accel=25.0)
         env.add_drone(drone)
 
+    # 3. Instantiate End-to-End Virtual Hardware Protocol Emulation Testbed
+    testbed = VirtualHardwareEmulationTestbed(num_nodes=num_drones)
+
     # Optional C2 Console PoC Visualizer
     visualizer = None
     if not headless:
@@ -107,13 +111,16 @@ def run_demo_scenario(scenario_type: str = "saturation", headless: bool = False,
             env.kill_drone(20)
             kill_triggered = True
 
-        # Local AI Edge Controller Execution (< 5ms response)
+        # Local AI Edge Controller Execution (< 3ms response)
         accel_signals, ai_latency_ms = ai_controller.compute_control_signals(env.drones, target_nodes)
+
+        # Dispatch DSP control packets through Virtual Hardware Protocol Testbed
+        hardware_telemetry = testbed.dispatch_dsp_control_loop(accel_signals)
 
         # Physics Step
         env.step(accel_signals)
 
-        # Render C2 Management Console PoC GUI
+        # Render DSD-OS C2 Management Console PoC GUI with Virtual Hardware Telemetry
         if visualizer and not headless:
             visualizer.render_console(env.drones, env.threats, target_nodes, env.current_time, 
                                        grid_shape=grid_shape, depth_layers=depth_layers, 
